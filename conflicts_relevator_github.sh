@@ -1,0 +1,227 @@
+#!/bin/bash
+
+# --- Configuration ---
+PR_FETCH_LIMIT=200
+# Array to hold all file paths
+FILE_PATHS=()
+
+# Assume the remote URL is passed via a flag for clarity, e.g., --url
+usage() {
+  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>]" >&2
+  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>]" >&2
+  exit 1
+}
+
+# Initialize variables
+REMOTE_URL=""
+
+# --- Parsing Arguments ---
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --file)
+            # Ensure the value exists for --file
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: Argument expected for $1." >&2
+                usage
+            fi
+            
+            # Split comma-separated values and add to the FILES array
+            IFS=',' read -r -a NEW_FILES <<< "$2"
+            FILE_PATHS+=( "${NEW_FILES[@]}" )
+            
+            shift 2 # Consume the flag and its value
+            ;;
+        --url|--remote-url)
+            # Ensure the value exists for the URL
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: Argument expected for $1." >&2
+                usage
+            fi
+            
+            REMOTE_URL="$2"
+            shift 2 # Consume the flag and its value
+            ;;
+        *)
+            # Handle any unknown positional arguments or flags
+            echo "Error: Unknown argument '$1'" >&2
+            usage
+            ;;
+    esac
+done
+
+# --- Validation and Defaults ---
+
+# 1. Validate if --file was provided
+if [ ${#FILE_PATHS[@]} -eq 0 ]; then
+    echo "Error: The --file parameter is required." >&2
+    usage
+fi
+
+# 2. Set default for REMOTE_URL if not provided via flag
+if [ -z "$REMOTE_URL" ]; then
+    # Use the original git command as the default
+    REMOTE_URL=$(git remote -v | head -n 1 | awk '{print $2}')
+    
+    # Optional: Add error handling if git fails
+    if [ $? -ne 0 ] || [ -z "$REMOTE_URL" ]; then
+        echo "Warning: Could not determine REMOTE_URL using 'git remote -v'. Continuing without a remote URL." >&2
+    fi
+fi
+
+# --- Function Definitions ---
+
+
+_print_results() {
+  # Check RESULTS is the only parameter passed
+  local -n file_to_prs=$1
+
+  if [ ${#file_to_prs[@]} -eq 0 ]; then
+    echo "None of the specified files are modified in open PRs." >&2
+    exit 0
+  fi
+
+  echo "--- Results ---"
+  # For each entry (File path) in file_to_prs, print the list of PR branch and PR ID
+  # Assume file_to_prs is an associative array populated elsewhere, e.g.:
+  #   file_to_prs["openhands/utils/llm.py"]="101,feature/llm-update_;102,bugfix/llm-patch"
+  #   file_to_prs["README.md"]="105,doc-fix"
+
+  # Iterate over all keys in the associative array
+  for file_name in "${!file_to_prs[@]}"; do
+      # 1. Retrieve the value (e.g., "101,feature/llm-update")
+      file_output="File: **$file_name** is modified in PRs: "
+      value="${file_to_prs[$file_name]}"
+
+      # 2. Use ; to split multiple PR entries
+      IFS=';' read -r -a pr_entries <<< "$value"
+      # 3. For each entry, split by , to get PR ID and PR name
+      for entry in "${pr_entries[@]}"; do
+          IFS=',' read -r pr_name pr_id <<< "$entry"
+          file_output+="\nPR #${pr_id}: ${pr_name}"
+      done
+      echo -e "$file_output"
+  done
+}
+
+_curl_api_method() {
+  echo "🔑 Searching GitHub for PRs modifying ${#FILE_PATHS[@]} file(s) via curl..." >&2
+
+  if [ -z "$GITHUB_TOKEN" ]; then
+    echo "Error: GITHUB_TOKEN environment variable is required for curl API access to authenticate to GitHub." >&2
+    echo "  Please follows the folling instructions:" >&2
+    echo "  1  Open GitHub in your web browser and log in to your account." >&2
+    echo "  2. Navigate to GitHub Settings --> Developer settings --> Personal access tokens --> Tokens (classic)." >&2
+    echo "  3. Click on 'Generate new token' with 'repo' scope." >&2
+    echo "  4. Copy the generated token and set it in your environment:" >&2
+    echo "     export GITHUB_TOKEN='your_token_here'" >&2
+    echo "  5. Restart your terminal or source your profile to apply the changes." >&2
+    echo "     For example, run: source ~/.bashrc or source ~/.zshrc" >&2
+    echo "  6. Retry running this script after setting the GITHUB_TOKEN." >&2
+    exit 1
+  fi
+
+
+  # 1. Get the current repository owner and name (e.g., 'owner/repo')
+  # eg: remote url: https://github.com/conflicts_resolver/conflicts_resolver.git
+  # result: conflicts_resolver/conflicts_resolver
+  REPO_FULL_NAME=$(echo "$REMOTE_URL" | sed -E 's/.*[:/]([^/]+\/[^/]+)\.git$/\1/')
+  echo "Debug: Parsed repository full name from REMOTE_URL: $REPO_FULL_NAME" >&2
+  
+  # 2. Fetch all OPEN pull requests for the repository, getting their number and head branch name.
+  # -w "\nHTTP_STATUS:%{http_code}\n" ensures the status code is printed on its own line
+  # -s suppresses the progress meter, keeping the output clean
+  OPEN_PRS_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+    -w "\nHTTP_STATUS:%{http_code}\n" \
+    "https://api.github.com/repos/${REPO_FULL_NAME}/pulls?state=open&per_page=100"
+  )
+
+  # Grep for the line starting with "HTTP_STATUS:", then cut to get the code.
+  HTTP_STATUS=$(grep '^HTTP_STATUS:' <<< "$OPEN_PRS_RESPONSE" | cut -d':' -f2)
+  # The body is everything that comes *before* the "HTTP_STATUS:" line. 'sed' is used to delete the last line (which contains the HTTP_STATUS)
+  OPEN_PRS=$(sed '$d' <<< "$OPEN_PRS_RESPONSE")
+
+  # 3 Use 'jq' filter to create an array of objects: [{"number": 123, "head_ref": "feature-branch"}, ...]
+  OPEN_PRS_JSON=$(echo "$OPEN_PRS" | jq -c '[.[] | {number: .number, head_ref: .head.ref}]')
+
+  if [ -z "$OPEN_PRS_JSON" ] || [ "$OPEN_PRS_JSON" = "[]" ]; then
+    echo "No open PRs found." >&2
+  fi
+
+  PR_COUNT=$(echo "$OPEN_PRS_JSON" | jq 'length')    
+  echo "Debug: Anlyzing $PR_COUNT open PR(s) in the repository..." >&2
+
+  # Clean target files from leading/trailing whitespace
+  mapfile -t CLEANED_TARGET_FILES < <(printf '%s\n' "${FILE_PATHS[@]}" | sed -E 's/^\s+|\s+$//g')
+
+  # Initialize an array to store the final results: "file_path,branch_name"
+  declare -A RESULTS
+
+  counter=1
+  while IFS= read -r PR_OBJECT; do
+
+    # if counter greater than 20, break the loop
+      
+    PR_NUMBER=$(echo "$PR_OBJECT" | jq -r '.number' | tr -d '[:space:]')
+    PR_BRANCH=$(echo "$PR_OBJECT" | jq -r '.head_ref' | tr -d '[:space:]')
+
+    # Terminal Output Overwriting Trick (Works in most terminals, not VSCode Debug Console):
+    # 1. '\r' (Carriage Return): Moves the cursor to the line start.
+    #    - **Issue:** If the new line is shorter, previous characters remain (e.g., '2222' after '111111' leaves '222211').
+    # 2. '\033[K' (ANSI Clear Code): Clears the line from the cursor position to the end.
+    #    - **Solution:** Using '\r\033[K' guarantees the entire previous line is fully overwritten, regardless of the new line's length.
+    # This solution works in most terminal emulators that support ANSI escape codes (eg: Linux terminal,Git Bash, macOS Terminal).
+    # However, it may not work in some consoles (eg: VSCode Debug Console).
+    echo -ne "\r\033[KProcessing PR $counter of $PR_COUNT: #${PR_NUMBER} (${PR_BRANCH})..." >&2
+    counter=$((counter + 1))
+
+    # 3. For each PR, fetch the list of files changed. The 'files' endpoint is used.
+    # TODO: Handle GitHub  GitHub's secondary rate limits if iterating over many PRs - max 5,000 requests per hour
+    CHANGED_FILES_RESPONSE=$(curl -L -s \
+      -H "Accept: application/vnd.github+json" \
+      -H "Authorization: Bearer $GITHUB_TOKEN" \
+      -H "X-GitHub-Api-Version: 2022-11-28" \
+      -w "\nHTTP_STATUS:%{http_code}\n" \
+      https://api.github.com/repos/OpenHands/OpenHands/pulls/${PR_NUMBER}/files
+    )
+    HTTP_STATUS_FILES=$(grep '^HTTP_STATUS:' <<< "$CHANGED_FILES_RESPONSE" | cut -d':' -f2)
+    CHANGED_FILES=$(sed '$d' <<< "$CHANGED_FILES_RESPONSE")
+
+    mapfile -t CHANGED_FILES_NAMES < <( \
+      # Remove the HTTP status (last line of the input string)
+      sed '$d' <<< "$CHANGED_FILES_RESPONSE" | \
+      # Parse the JSON, extract all 'filename' values, and output them one per line
+      jq -r '.[].filename' | \
+      # Trim leading/trailing whitespace from each filename using extended regex
+      sed -E 's/^\s+|\s+$//g' \
+    )
+
+
+    # 4. Check if any of the requested FILE_PATHS are present in the PR's changed files.
+    for TARGET_FILE in "${CLEANED_TARGET_FILES[@]}"; do
+      # check if TARGET_FILE is equal to any of the elements in CHANGED_FILES_NAMES
+      for CHANGED_FILE in "${CHANGED_FILES_NAMES[@]}"; do
+
+        #TARGET_FILE_CLEAN=$(echo "$TARGET_FILE" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+        if [ "$CHANGED_FILE" = "$TARGET_FILE" ]; then
+
+          # Check if the key ($TARGET_FILE_CLEAN) exists in the associative array
+          # The syntax ${!RESULTS[@]} returns a list of all keys.
+          if [[ ! -v RESULTS["$TARGET_FILE"] ]]; then
+              # We use a string to store the list/array elements, separated by a delimiter.
+              # We'll use a semicolon (;) as the list delimiter.
+              RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER}"
+          else
+              RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER}"
+          fi
+        fi
+      done
+    done
+  done < <(echo "$OPEN_PRS_JSON" | jq -c '.[]')
+
+  _print_results RESULTS
+}
+
+
+# --- Main Execution Block ---
+_curl_api_method
