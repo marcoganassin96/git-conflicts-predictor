@@ -292,5 +292,19 @@ _gh_cli_method() {
   _print_results RESULTS 
 }
 
+get_github_pr_branches() {
+  # Check if the 'gh' CLI tool is installed and available
+  if command -v gh &> /dev/null; then
+    echo "✅ 'gh' CLI found. Using the efficient 'gh pr list' method." >&2
+    _gh_cli_method
+  elif command -v curl &> /dev/null; then
+    echo "⚠️ 'gh' CLI not found. Falling back to the slower 'curl' API method." >&2
+    _curl_api_method
+  else
+    echo "❌ Error: Neither 'gh' CLI nor 'curl' is installed. Cannot proceed." >&2
+    exit 1
+  fi
+}
+
 # --- Main Execution Block ---
-_curl_api_method
+get_github_pr_branches
