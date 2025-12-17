@@ -14,6 +14,7 @@ usage() {
 
 # Initialize variables
 REMOTE_URL=""
+METHOD=""
 
 # --- Parsing Arguments ---
 
