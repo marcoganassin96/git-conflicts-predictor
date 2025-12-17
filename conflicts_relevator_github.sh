@@ -42,6 +42,28 @@ while [[ $# -gt 0 ]]; do
             REMOTE_URL="$2"
             shift 2 # Consume the flag and its value
             ;;
+      
+        --method)
+            # Ensure the value exists for --method
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: Argument expected for $1." >&2
+                usage
+            fi
+            METHOD="$2"
+
+            # Allowed methods are 'gh' and 'api'
+            declare -a ALLOWED_METHODS=("gh" "api")
+
+            if [[ ! " ${ALLOWED_METHODS[*]} " =~ " ${METHOD} " ]]; then
+                last_idx=$((${#ALLOWED_METHODS[@]} - 1))
+                printf -v csv "'%s', " "${ALLOWED_METHODS[@]:0:$last_idx}"
+                formatted_methods="${csv%, } and '${ALLOWED_METHODS[$last_idx]}'"
+                echo "Error: Invalid method '$METHOD'. Allowed methods are $formatted_methods" >&2
+                exit 1
+            fi
+
+            shift 2 # Consume the flag and its value
+            ;;
         *)
             # Handle any unknown positional arguments or flags
             echo "Error: Unknown argument '$1'" >&2
@@ -330,7 +352,19 @@ _gh_cli_method() {
 }
 
 get_github_pr_branches() {
-  # Check if the 'gh' CLI tool is installed and available
+  # If a method is explicitly specified, use it
+  if [ -n "$METHOD" ]; then
+    if [ "$METHOD" = "gh" ]; then
+      echo "✅ Using the specified 'gh' CLI method." >&2
+      _gh_cli_method
+    elif [ "$METHOD" = "api" ]; then
+      echo "✅ Using the specified 'curl' API method." >&2
+      _curl_api_method
+    fi
+    return
+  fi
+  
+  # Otherwise, auto-detect the best available method
   if command -v gh &> /dev/null; then
     echo "✅ 'gh' CLI found. Using the efficient 'gh pr list' method." >&2
     _gh_cli_method
