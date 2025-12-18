@@ -264,7 +264,7 @@ _curl_api_method() {
       -H "Authorization: Bearer $GITHUB_TOKEN" \
       -H "X-GitHub-Api-Version: 2022-11-28" \
       -w "\nHTTP_STATUS:%{http_code}\n" \
-      https://api.github.com/repos/OpenHands/OpenHands/pulls/${PR_NUMBER}/files
+      https://api.github.com/repos/${REPO_FULL_NAME}/pulls/${PR_NUMBER}/files
     )
     HTTP_STATUS_FILES=$(grep '^HTTP_STATUS:' <<< "$CHANGED_FILES_RESPONSE" | cut -d':' -f2)
     CHANGED_FILES=$(sed '$d' <<< "$CHANGED_FILES_RESPONSE")
