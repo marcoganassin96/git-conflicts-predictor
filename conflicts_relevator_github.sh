@@ -173,7 +173,7 @@ _print_results() {
 }
 
   ##
-  # @Function: _get_repo_full_name
+  # @Function: _get_repo_slug
   # @Description: Extracts the full repository name ('owner/repo') from a Git remote URL.
   #
   # @Param 1 (String) REMOTE_URL: The remote URL of the Git repository.
@@ -183,11 +183,11 @@ _print_results() {
   #
   # @Returns (Integer): Exit code. 0 if the extraction is successful.
   ##
-_get_repo_full_name() {
-  REPO_FULL_NAME=$(echo "$1" | sed -E 's/.*[:\/]([^/]+\/[^/.]+)(\.git)?$/\1/')
-  echo "Debug: Parsed repository full name from REMOTE_URL: $REPO_FULL_NAME" >&2
+_get_repo_slug() {
+  REPO_SLUG=$(echo "$1" | sed -E 's/.*[:\/]([^/]+\/[^/.]+)(\.git)?$/\1/')
+  echo "Debug: Parsed repository full name from REMOTE_URL: $REPO_SLUG" >&2
 
-  echo "$REPO_FULL_NAME" 
+  echo "$REPO_SLUG" 
   return 0
 }
 
@@ -208,14 +208,14 @@ _curl_api_method() {
     exit 1
   fi
   
-  REPO_FULL_NAME=$(_get_repo_full_name "$REMOTE_URL");
+  REPO_SLUG=$(_get_repo_slug "$REMOTE_URL");
 
   # 2. Fetch all OPEN pull requests for the repository, getting their number and head branch name.
   # -w "\nHTTP_STATUS:%{http_code}\n" ensures the status code is printed on its own line
   # -s suppresses the progress meter, keeping the output clean
   OPEN_PRS_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
     -w "\nHTTP_STATUS:%{http_code}\n" \
-    "https://api.github.com/repos/${REPO_FULL_NAME}/pulls?state=open&per_page=100"
+    "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=100"
   )
 
   # Grep for the line starting with "HTTP_STATUS:", then cut to get the code.
@@ -264,7 +264,7 @@ _curl_api_method() {
       -H "Authorization: Bearer $GITHUB_TOKEN" \
       -H "X-GitHub-Api-Version: 2022-11-28" \
       -w "\nHTTP_STATUS:%{http_code}\n" \
-      https://api.github.com/repos/${REPO_FULL_NAME}/pulls/${PR_NUMBER}/files
+      https://api.github.com/repos/${REPO_SLUG}/pulls/${PR_NUMBER}/files
     )
     HTTP_STATUS_FILES=$(grep '^HTTP_STATUS:' <<< "$CHANGED_FILES_RESPONSE" | cut -d':' -f2)
     CHANGED_FILES=$(sed '$d' <<< "$CHANGED_FILES_RESPONSE")
@@ -306,14 +306,14 @@ _curl_api_method() {
 
 _gh_cli_method() {
   echo "🔑 Searching GitHub for PRs modifying ${#FILE_PATHS[@]} file(s) via gh..." >&2
-  REPO_FULL_NAME=$(_get_repo_full_name "$REMOTE_URL")
+  REPO_SLUG=$(_get_repo_slug "$REMOTE_URL")
   
   TARGET_FILES=$(IFS=,; echo "${FILE_PATHS[*]}")
   
   # The core command to list and filter PRs via GitHub API
   OPEN_PRS_RESPONSE=$(
     gh pr list \
-      --repo "$REPO_FULL_NAME" \
+      --repo "$REPO_SLUG" \
       --limit 5 \
       --json number,headRefName,files \
       --search "is:open is:unmerged"
