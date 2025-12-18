@@ -239,6 +239,10 @@ _curl_api_method() {
   fi
   
   REPO_SLUG=$(_get_repo_slug "$REMOTE_URL");
+  if [ -z "$REPO_SLUG" ]; then
+    echo "Error: could not determine repository slug from REMOTE_URL='$REMOTE_URL'." >&2
+    exit 1
+  fi
 
   # 2. Fetch all OPEN pull requests for the repository, getting their number and head branch name.
   # -w "\nHTTP_STATUS:%{http_code}\n" ensures the status code is printed on its own line
