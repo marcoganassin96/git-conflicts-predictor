@@ -266,24 +266,70 @@ _curl_api_method() {
   # 2. Fetch all OPEN pull requests for the repository, getting their number and head branch name.
   # -w "\nHTTP_STATUS:%{http_code}\n" ensures the status code is printed on its own line
   # -s suppresses the progress meter, keeping the output clean
-  OPEN_PRS_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-    -w "\nHTTP_STATUS:%{http_code}\n" \
-    "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=${LIMIT}"
-  )
+  # Fetch open PRs page-by-page to respect GitHub's per_page limits and the user-specified LIMIT
+  per_page_max=100
+  remaining=$LIMIT
+  page_offset=1
+  all_prs_json='[]'
 
-  # Grep for the line starting with "HTTP_STATUS:", then cut to get the code.
-  HTTP_STATUS=$(grep '^HTTP_STATUS:' <<< "$OPEN_PRS_RESPONSE" | cut -d':' -f2)
-  # The body is everything that comes *before* the "HTTP_STATUS:" line. 'sed' is used to delete the last line (which contains the HTTP_STATUS)
-  OPEN_PRS=$(sed '$d' <<< "$OPEN_PRS_RESPONSE")
+  while [ "$remaining" -gt 0 ]; do
+    page_size=$(( remaining < per_page_max ? remaining : per_page_max ))
+
+    RESP=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+      -w "\nHTTP_STATUS:%{http_code}\n" \
+      "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=${page_size}&page=${page_offset}"
+    )
+
+    HTTP_STATUS=$(grep '^HTTP_STATUS:' <<< "$RESP" | cut -d':' -f2)
+    BODY=$(sed '$d' <<< "$RESP")
+
+    if [ "$HTTP_STATUS" -ne 200 ]; then
+      echo "Error: GitHub API returned HTTP status $HTTP_STATUS while fetching open PRs (page_offset ${page_offset})." >&2
+      # Provide body for debugging but avoid printing huge responses
+      echo "Response (truncated): $(echo "$BODY" | head -c 1000)" >&2
+      exit 1
+    fi
+
+    # If this page has no items, stop paging
+
+    # Remove possible carriage return since jq may introduce them
+    page_count=$(echo "$BODY" | jq 'length' 2>/dev/null | tr -d '\r' || echo 0)
+
+    if [ "$page_count" -eq 0 ]; then
+      break
+    fi
+
+    # Concatenate arrays: all_prs_json + BODY
+    all_prs_json=$(echo "$all_prs_json" "$BODY" | jq -s 'add')
+
+    # If the page returned less than requested, we are at the end
+    if [ "$page_count" -lt "$page_size" ]; then
+      break
+    fi
+
+    # Remove possible carriage return from total_fetched since jq may introduce them
+    total_fetched=$(echo "$all_prs_json" | jq 'length' | tr -d '\r')
+    
+    # If we've reached or exceeded the requested LIMIT, truncate and stop
+    if [ "$total_fetched" -ge "$LIMIT" ]; then
+      all_prs_json=$(echo "$all_prs_json" | jq ".[:$LIMIT]")
+      break
+    fi
+
+    remaining=$(( LIMIT - total_fetched ))
+    page_offset=$(( page_offset + 1 ))
+  done
 
   # 3 Use 'jq' filter to create an array of objects: [{"number": 123, "head_ref": "feature-branch"}, ...]
-  OPEN_PRS_JSON=$(echo "$OPEN_PRS" | jq -c '[.[] | {number: .number, head_ref: .head.ref}]')
+  OPEN_PRS_JSON=$(echo "$all_prs_json" | jq -c '[.[] | {number: .number, head_ref: .head.ref}]')
 
   if [ -z "$OPEN_PRS_JSON" ] || [ "$OPEN_PRS_JSON" = "[]" ]; then
     echo "No open PRs found." >&2
   fi
 
-  PR_COUNT=$(echo "$OPEN_PRS_JSON" | jq 'length')    
+  # Remove possible carriage return from total_fetched since jq may introduce them
+  PR_COUNT=$(echo "$OPEN_PRS_JSON" | jq 'length' | tr -d '\r') 
+  PR_COUNT=$(( PR_COUNT < LIMIT ? PR_COUNT : LIMIT ))
   echo "Debug: Anlyzing $PR_COUNT open PR(s) in the repository..." >&2
 
   # Clean target files from leading/trailing whitespace
