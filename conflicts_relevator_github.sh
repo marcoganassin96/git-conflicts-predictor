@@ -330,7 +330,7 @@ _curl_api_method() {
   # Remove possible carriage return from total_fetched since jq may introduce them
   PR_COUNT=$(echo "$OPEN_PRS_JSON" | jq 'length' | tr -d '\r') 
   PR_COUNT=$(( PR_COUNT < LIMIT ? PR_COUNT : LIMIT ))
-  echo "Debug: Anlyzing $PR_COUNT open PR(s) in the repository..." >&2
+  echo "Debug: Analyzing $PR_COUNT open PR(s) in the repository..." >&2
 
   # Clean target files from leading/trailing whitespace
   mapfile -t CLEANED_TARGET_FILES < <(printf '%s\n' "${FILE_PATHS[@]}" | sed -E 's/^\s+|\s+$//g')
@@ -432,7 +432,7 @@ _gh_cli_method() {
   declare -A RESULTS
   # Iterate over each PR object in the JSON array
   PR_COUNT=$(echo "$OPEN_PRS_RESPONSE" | jq 'length')
-  echo "Debug: Anlyzing $PR_COUNT open PR(s) in the repository..."
+  echo "Debug: Analyzing $PR_COUNT open PR(s) in the repository..."
   counter=1
   while IFS= read -r PR_OBJECT; do
     PR_NUMBER=$(echo "$PR_OBJECT" | jq -r '.number' | tr -d '[:space:]')
