@@ -67,6 +67,19 @@ PR #132: docs/readme
 - **Multiple Access Methods**: Uses CLI tools (like `gh` for GitHub) when available for better performance, otherwise falls back to REST API.
 - **Comprehensive Output**: Provides detailed output of overlapping files and associated PRs/MRs.
 
+
+## 🎯 Use Cases
+
+### 1. Team Coordination
+Help teams identify potential conflicts in their work in early stages, so they can coordinate planning of their actual work!
+
+### 2. Avoid Redundant Work
+Find out if someone else is already working on the same files/features you're thinking to add/modify, before actually starting the work!
+
+### 3. Pre-Merge Conflict Detection
+Check for potential conflicts before creating a PR
+
+
 ## 📋 Supported Providers
 
 | Provider | CLI Tool | API Method | Authentication | Working Status |
@@ -74,6 +87,14 @@ PR #132: docs/readme
 | **GitHub** | `gh` (recommended) | REST API | `GITHUB_TOKEN` | ✅ Fully Supported |
 | **Bitbucket** | N/A | REST API | `BITBUCKET_TOKEN` + `BITBUCKET_USERNAME` | 🛠 Work in Progress |
 | **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
+
+
+## 🚀 Release Planning
+- Implmenentation for BitBucket provider
+- Implementation for GitLab provider
+- Auto-detection of files in current working branch as default --file input
+- Publish as installable package (e.g., via homebrew)
+
 
 ## 🛠 Installation & Dependencies
 
@@ -132,24 +153,6 @@ glab auth login
 # Method 2: Using Personal Access Token
 export GITLAB_TOKEN='your_gitlab_token_here'
 ```
-
-## 🎯 Use Cases
-
-### 1. Team Coordination
-Help teams identify potential conflicts in their work in early stages, so they can coordinate planning of their actual work!
-
-### 2. Avoid Redundant Work
-Find out if someone else is already working on the same files/features you're thinking to add/modify, before actually starting the work!
-
-### 3. Pre-Merge Conflict Detection
-Check for potential conflicts before creating a PR
-
-
-## 🚀 Release Planning
-- Implmenentation for BitBucket provider
-- Implementation for GitLab provider
-- Auto-detection of files in current working branch as default --file input
-
 
 ## 🔧 Troubleshooting
 
