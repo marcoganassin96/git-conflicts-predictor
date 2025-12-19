@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_SCRIPT="$(dirname "$0")/../conflicts_relevator_github.sh"
+REPO_SCRIPT="$(dirname "$0")/../../scripts/common.sh"
 
 if [ ! -f "$REPO_SCRIPT" ]; then
   echo "ERROR: script not found: $REPO_SCRIPT" >&2
   exit 2
 fi
 
-# Extract only the _get_repo_slug function definition from the script and eval it
-FUNC_DEF=$(sed -n '/^_get_repo_slug() {/,/^}/p' "$REPO_SCRIPT")
+# Extract only the common_get_repo_slug function definition from the script and eval it
+FUNC_DEF=$(sed -n '/^common_get_repo_slug() {/,/^}/p' "$REPO_SCRIPT")
 # Ensure we actually extracted something
 if [ -z "$FUNC_DEF" ]; then
-  echo "ERROR: could not extract _get_repo_slug from $REPO_SCRIPT" >&2
+  echo "ERROR: could not extract common_get_repo_slug from $REPO_SCRIPT" >&2
   exit 2
 fi
 
@@ -24,7 +24,7 @@ _assert_eq() {
   local expected="$1"
   local input="$2"
   local out
-  out=$( _get_repo_slug "$input" ) || out=""
+  out=$( common_get_repo_slug "$input" ) || out=""
   # Trim whitespace
   out=$(printf "%s" "$out" | sed -E 's/^\s+|\s+$//g')
   if [ "$out" != "$expected" ]; then
