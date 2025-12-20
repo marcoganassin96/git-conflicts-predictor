@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_SCRIPT="$(dirname "$0")/../../scripts/common.sh"
+# Determine this test's directory and source common.sh to compute PROJECT_ROOT
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+. "$SCRIPT_DIR/../../scripts/common.sh"
+REPO_SCRIPT="$PROJECT_ROOT/scripts/common.sh"
 
 if [ ! -f "$REPO_SCRIPT" ]; then
   echo "ERROR: script not found: $REPO_SCRIPT" >&2
