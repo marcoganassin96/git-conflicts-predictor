@@ -38,7 +38,7 @@ mkdir -p "$TMP1/sub/dir"
 cp "$COMMON_SRC" "$TMP1/sub/dir/common.sh"
 (
   cd "$TMP1/sub/dir"
-  # source the copied common.sh which should discover the marker at $TMP1
+  # source the copied common.sh which will attempt to source project_root.sh
   . ./common.sh
   ACTUAL="$(cd "$PROJECT_ROOT" && pwd -P)"
   EXPECTED="$(cd "$TMP1" && pwd -P)"
