@@ -2,8 +2,10 @@
 
 # Source shared helpers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-. "$SCRIPT_DIR/scripts/logging.sh"
+# Source common first to compute PROJECT_ROOT
 . "$SCRIPT_DIR/scripts/common.sh"
+# Source logging from PROJECT_ROOT so other scripts can rely on PROJECT_ROOT-based lookups
+. "$PROJECT_ROOT/scripts/logging.sh"
 
 # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
 common_parse_args "$@"
