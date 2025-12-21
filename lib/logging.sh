@@ -3,8 +3,12 @@
 # Provides: log_info, log_warn, log_error, log_debug, log_progress
 
 # Basic logging
+log() {
+  echo -e "$*" 1>&2
+}
+
 log_info() {
-  echo "[INFO] $*" 1>&2
+  printf "[INFO] $*" 1>&2
 }
 
 log_warn() {

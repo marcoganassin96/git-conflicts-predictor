@@ -207,11 +207,11 @@ common_print_results() {
   local -n file_to_prs=$1
 
   if [ ${#file_to_prs[@]} -eq 0 ]; then
-    echo "None of the specified files are modified in open PRs." >&2
+    log "None of the specified files are modified in open PRs." >&2
     exit 0
   fi
 
-  echo "--- Results ---"
+  log "\n--- Results ---"
   # For each entry (File path) in file_to_prs, print the list of PR branch and PR ID
   # Assume file_to_prs is an associative array populated elsewhere, e.g.:
   #   file_to_prs["utils/llm.py"]="101,feature/llm-update_;102,bugfix/llm-patch"
@@ -228,8 +228,8 @@ common_print_results() {
       # 3. For each entry, split by , to get PR ID and PR name
       for entry in "${pr_entries[@]}"; do
           IFS=',' read -r pr_name pr_id <<< "$entry"
-          file_output+="\nPR #${pr_id}: ${pr_name}"
+          file_output+="\n- PR #${pr_id}: ${pr_name}"
       done
-      echo -e "$file_output"
+      log "$file_output"
   done
 }
