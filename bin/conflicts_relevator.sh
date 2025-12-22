@@ -31,6 +31,7 @@ manage_conflicts_relevation()
 
   # Define the path to the provider-specific scripts
   GITHUB_SCRIPT="$PROJECT_ROOT_DIR/lib/conflicts_relevator_github.sh"
+  BITBUCKET_SCRIPT="$PROJECT_ROOT_DIR/lib/conflicts_relevator_bitbucket.sh"
 
   # --- COPY THE ORIGINAL ARGUMENTS IMMEDIATELY ---
   # This creates a copy of the arguments that will NOT be affected by 'shift's in common_parse_args
@@ -60,8 +61,7 @@ manage_conflicts_relevation()
     exit 1
   elif [[ $REMOTE_URL =~ bitbucket.org ]]; then
     PROVIDER="bitbucket"
-    log_error "Bitbucket provider detected, but provider script is not yet implemented." >&2
-    exit 1
+    PROVIDER_SCRIPT=$BITBUCKET_SCRIPT
   else
     log_error "This provider is not recognized." >&2
     exit 1
