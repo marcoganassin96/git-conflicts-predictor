@@ -9,6 +9,19 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 . "$PROJECT_ROOT_DIR/lib/common.sh"
 . "$PROJECT_ROOT_DIR/lib/logging.sh"
 
+##
+# @Function: manage_conflicts_relevation
+# @Description: Main function to manage conflicts relevation across different Git providers.
+#
+# @Param 1 (Associative Array) results: Name of the associative array to store the results where keys are file paths and values are strings formatted as "PR_BRANCH,PR_ID;PR_BRANCH,PR_ID;..."
+# @Param 2 (String) --file: Comma-separated list of file paths to check.
+# @Param 3 (String) --url: Git remote URL of the repository.
+# @Param 4 (String) [--method]: Optional. Method to use ('gh' or 'api').
+# @Param 5 (String) [--limit]: Optional. Maximum number of PRs to analyze.
+#
+# @Output: Populates the provided associative array with results.
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 manage_conflicts_relevation()
 {
   # Capture the first argument as the reference name

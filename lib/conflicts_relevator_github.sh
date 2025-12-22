@@ -37,6 +37,19 @@ check_dependencies() {
   fi
 }
 
+##
+# @Function: _curl_api_method
+# @Description: Use GitHub REST API via curl to find PRs modifying specified files.
+# @Param 1 (Array) FILE_PATHS: Array of file paths to check.
+#   Example: ("path/to/file1.py" "docs/README.md")
+# @Param 2 (String) REMOTE_URL: Git remote URL of the repository.
+#   Example: "
+# @Param 3 (String) LIMIT: Maximum number of PRs to analyze.
+#   Example: "50"
+# @Output (Associative Array): Prints the results to standard output.
+#       ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 _curl_api_method() {
   # Initialize an array to store the final results: "file_path,branch_name"
   local -n RESULTS=$1
@@ -192,6 +205,23 @@ _curl_api_method() {
   return 0
 }
 
+
+
+##
+# @Function: _gh_cli_method
+# @Description: Use GitHub CLI to find PRs modifying specified files.
+# @Param 1 (Array) FILE_PATHS: Array of file paths to check.
+#   Example: ("path/to/file1.py" "docs/README.md")
+# @Param 2 (String) REMOTE_URL: Git remote URL of the repository.
+#   Example: "https://github.com/owner/repo.git" 
+#  @Param 3 (String) LIMIT: Maximum number of PRs to analyze.
+#   Example: "50"
+#  @Param 4 (String) METHOD: Method to use ('gh' or 'api').
+#   Example: "gh" or "api"
+# @Output (Associative Array): Prints the results to standard output.
+#       ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 _gh_cli_method() {
   # Initialize an array to store the final results: "file_path,branch_name"
   local -n RESULTS=$1
@@ -255,6 +285,13 @@ _gh_cli_method() {
   return 0
 }
 
+##
+# @Function: get_github_pr_branches
+# @Description: Wrapper function to select the method (gh or curl) to get PR branches
+# @Param 1 (Associative Array) method_result: Name of the associative array to store the results.
+# @Output: Populates the provided associative array with results.
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 get_github_pr_branches() {
   local -n method_result=$1
 
@@ -284,6 +321,19 @@ get_github_pr_branches() {
   return 0
 }
 
+##
+# @Function: relevate_conflicts
+# @Description: Main function to relevate conflicts using GitHub as provider.
+#
+# @Param 1 (Associative Array) results: Name of the associative array to store the results where keys are file paths and values are strings formatted as "PR_BRANCH,PR_ID;PR_BRANCH,PR_ID;..."
+# @Param 2 (String) --file: Comma-separated list of file paths to check.
+# @Param 3 (String) --url: Git remote URL of the repository.
+# @Param 4 (String) [--method]: Optional. Method to use ('gh' or 'api').
+# @Param 5 (String) [--limit]: Optional. Maximum number of PRs to analyze.
+#
+# @Output: Populates the provided associative array with results.
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 relevate_conflicts(){
   # Capture the first argument as the reference name
   local -n github_results=$1
