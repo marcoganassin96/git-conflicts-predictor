@@ -1,0 +1,26 @@
+; Inno Setup script example for installing Git Conflicts Predictor on Windows
+; Adjust AppId, Publisher, and Version as needed
+
+[Setup]
+AppName=Git Conflicts Predictor
+AppVersion=0.0.0
+DefaultDirName={pf}\GitConflictsPredictor
+DefaultGroupName=Git Conflicts Predictor
+OutputBaseFilename=git-conflicts-predictor-setup
+Compression=lzma2
+SolidCompression=yes
+
+[Files]
+; Install all files from the release folder
+Source: "{#MySourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Icons]
+Name: "{group}\Git Conflicts Predictor"; Filename: "{app}\conflicts_relevator.cmd"
+Name: "{userdesktop}\Git Conflicts Predictor"; Filename: "{app}\conflicts_relevator.cmd"; Tasks: desktopicon
+
+[Tasks]
+Name: desktopicon; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
+
+[Run]
+; Optional: add the app folder to the user's PATH by writing to the registry (per-user)
+Filename: "reg.exe"; Parameters: "add HKCU\Environment /v PATH /t REG_EXPAND_SZ /d \"%PATH%;{app}\" /f"; StatusMsg: "Adding {app} to PATH..."; Flags: runhidden
