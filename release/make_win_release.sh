@@ -37,7 +37,16 @@ fi
 # Create zip
 mkdir -p "$RELEASE_DIR"
 pushd "$RELEASE_DIR" >/dev/null
-zip -r "git-conflicts-predictor-${VERSION}-win.zip" "git-conflicts-predictor-win" >/dev/null
+
+# Use the proper command based on the OS
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "windows_nt" ]]; then
+  # Windows
+  powershell.exe -nologo -noprofile -command "Compress-Archive -Path 'git-conflicts-predictor-win' -DestinationPath 'git-conflicts-predictor-${VERSION}-win.zip' -Force"
+else
+  # Linux/macOS
+  zip -r "git-conflicts-predictor-${VERSION}-win.zip" "git-conflicts-predictor-win" >/dev/null
+fi
+
 popd >/dev/null
 
 # Clean up
