@@ -1,0 +1,82 @@
+name: Build and publish Windows release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (optional if using a tag)'
+        required: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.version }}" ]; then
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "version=0.0.0" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Extract tag name from ref (refs/tags/v1.2.3 -> v1.2.3)
+            ref=${GITHUB_REF#refs/tags/}
+            echo "version=${ref#v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Make release zip
+        run: |
+          chmod +x release/make_win_release.sh
+          ./release/make_win_release.sh "${{ steps.vars.outputs.version }}"
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          FILE=release/git-conflicts-predictor-${{ steps.vars.outputs.version }}-win.zip
+          sha256sum "$FILE" | awk '{print $1}' > release/sha.txt
+          echo "sha256=$(cat release/sha.txt)" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.vars.outputs.version }}
+          release_name: v${{ steps.vars.outputs.version }}
+          body: |
+            Automated Windows release for v${{ steps.vars.outputs.version }}
+
+            SHA256: ${{ steps.sha.outputs.sha256 }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release zip
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/git-conflicts-predictor-${{ steps.vars.outputs.version }}-win.zip
+          asset_name: git-conflicts-predictor-${{ steps.vars.outputs.version }}-win.zip
+          asset_content_type: application/zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload SHA256
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/sha.txt
+          asset_name: git-conflicts-predictor-${{ steps.vars.outputs.version }}-win.zip.sha256
+          asset_content_type: text/plain
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output release info
+        run: |
+          echo "Release created: ${{ steps.create_release.outputs.html_url }}"
+          echo "Artifact: git-conflicts-predictor-${{ steps.vars.outputs.version }}-win.zip"
