@@ -30,8 +30,8 @@ manage_conflicts_relevation()
   shift
 
   # Define the path to the provider-specific scripts
-  GITHUB_SCRIPT="$PROJECT_ROOT_DIR/lib/conflicts_relevator_github.sh"
-  BITBUCKET_SCRIPT="$PROJECT_ROOT_DIR/lib/conflicts_relevator_bitbucket.sh"
+  GITHUB_SCRIPT="$PROJECT_ROOT_DIR/lib/git_overlap_github.sh"
+  BITBUCKET_SCRIPT="$PROJECT_ROOT_DIR/lib/git_overlap_bitbucket.sh"
 
   # --- COPY THE ORIGINAL ARGUMENTS IMMEDIATELY ---
   # This creates a copy of the arguments that will NOT be affected by 'shift's in common_parse_args

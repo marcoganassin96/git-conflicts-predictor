@@ -1,13 +1,12 @@
-# Git Conflicts Predictor
+# Git Overlap
 
-A powerful multi-provider tool that helps developers identify files overlaps and potential merge conflicts before they occur by analyzing which open Pull Requests (PRs) or Merge Requests (MRs) are modifying the same files you're working on.
-
+A multi-provider tool that **identifies file overlaps** and **potential conflicts** by analyzing **which open Pull/Merge Requests are modifying the same files you are currently editing**.
 
 ## 📖 Usage
 
 ### 📊 Example
 ```bash
-$ ./bin/conflicts_relevator.sh --file src/main.py,README.md,src/foo.py
+$ git overlap -f src/main.py,README.md,src/foo.py
 
 Debug: Parsed repository full name from REMOTE_URL: https://github.com/marcoganassin96/git-conflicts-predictor
 🔑 Searching GitHub for PRs modifying 2 file(s) via gh CLI...
@@ -24,31 +23,33 @@ File: **README.md** is modified in PRs:
 PR #132: docs/readme
 ```
 
+⚠️ **Note**: To use this tool, you need to install it following the [Setup Instructions](#setup) below.
+
 ### Basic Usage
 ```bash
 # Analyze a single file
-./bin/conflicts_relevator.sh --file src/main.py
+git overlap --file src/main.py
 
 # Analyze multiple files
-./bin/conflicts_relevator.sh --file src/main.py --file README.md
+git overlap --file src/main.py --file README.md
 
 # Analyze comma-separated files
-./bin/conflicts_relevator.sh --file "src/main.py,README.md,package.json"
+git overlap --file "src/main.py,README.md,package.json"
 ```
 
 ### Advanced Usage
 ```bash
-./bin/conflicts_relevator.sh --file "README.md,sparkling_water/ai_engine/ai.py" --url "https://github.com/marcoganassin96/git-conflicts-predictor-tester-github.git" --method api --limit 50
+git overlap -f "README.md,sparkling_water/ai_engine/ai.py" -u "https://github.com/marcoganassin96/git-conflicts-predictor-tester-github.git" -m api -l 50
 ```
 
 ### Command Line Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `--file <path>` | File path to analyze (required, can be used multiple times) | `--file src/main.py` |
-| `--url <url>` | Git remote URL (optional, auto-detected if not provided) | `--url https://github.com/user/repo.git` |
-| `--method <gh\|api>` | Method to use for querying provider: `gh` (GitHub CLI) or `api` (REST via curl). If omitted the script auto-detects the best available method. | `--method api` |
-| `--limit <number>` | Maximum number of open PRs to analyze (defaults to 200). Useful to cap work when repositories have many open PRs. | `--limit 100` |
+| `[-f\|--file] <path>` | File path to analyze (required, can be used multiple times) | `--file src/main.py` |
+| `[-u\|--url] <url>` | Git remote URL (optional, auto-detected if not provided) | `--url https://github.com/user/repo.git` |
+| `[-m\|--method] <gh\|api>` | Method to use for querying provider: `gh` (GitHub CLI) or `api` (REST via curl). If omitted the script auto-detects the best available method. | `--method api` |
+| `[-l\|--limit] <number>` | Maximum number of open PRs to analyze (defaults to 200). Useful to cap work when repositories have many open PRs. | `--limit 100` |
 
 
 ### Environment Variables
@@ -88,13 +89,33 @@ Check for potential conflicts before creating a PR
 | **Bitbucket** | N/A | REST API | `BITBUCKET_TOKEN` | ✅ Added (API)
 | **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
 
+## SETUP
+1. Download the [Last 'git-overlap-0.0.0.zip' release](https://github.com/marcoganassin96/git-conflicts-predictor/releases/latest)
+2. Unzip the contents to a directory of your choice
+3. Run the `setup.sh` script to install the tool and set up necessary environment variables
+   ```bash
+   cd path/to/unzipped/directory
+   bash setup.sh
+   ```
+4. Restart your terminal or source your shell configuration file to apply changes
+   ```bash
+   source ~/.bashrc  # or source ~/.zshrc for Zsh users
+   ```
+5. Verify installation by running:
+   ```bash
+   git-overlap -h
+   ```
+   or directly:
+   ```bash
+   git overlap -f README.md
+   ```
+6. Follow the Authentication Setup section below to configure access tokens for your Git providers (not needed if using CLI tools like `gh`)
+
 
 ## 🚀 Release Planning
-- Bitbucket provider: added (API-based implementation)
 - Implementation for GitLab provider
 - Auto-detection of files in current working branch as default --file input
-- Publish as installable package (e.g., via homebrew)
-
+- Publish as installable package (e.g., via homebrew, winget, ...)
 
 ## 🛠 Installation & Dependencies
 
@@ -141,8 +162,7 @@ export GITHUB_TOKEN='your_github_token_here'
 
 ### Bitbucket
 ```bash
-export BITBUCKET_USERNAME='your_username'
-export BITBUCKET_TOKEN='your_app_password'
+export BITBUCKET_TOKEN='your_bitbucket_token_here'
 ```
 
 ### GitLab
