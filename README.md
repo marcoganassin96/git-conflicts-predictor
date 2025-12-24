@@ -8,7 +8,7 @@ A multi-provider tool that **identifies file overlaps** and **potential conflict
 ```bash
 $ git overlap -f src/main.py,README.md,src/foo.py
 
-Debug: Parsed repository full name from REMOTE_URL: https://github.com/marcoganassin96/git-conflicts-predictor
+Debug: Parsed repository full name from REMOTE_URL: https://github.com/marcoganassin96/git-overlap
 🔑 Searching GitHub for PRs modifying 2 file(s) via gh CLI...
 Debug: Analyzing 15 open PR(s) in the repository...
 
@@ -39,7 +39,7 @@ git overlap --file "src/main.py,README.md,package.json"
 
 ### Advanced Usage
 ```bash
-git overlap -f "README.md,sparkling_water/ai_engine/ai.py" -u "https://github.com/marcoganassin96/git-conflicts-predictor-tester-github.git" -m api -l 50
+git overlap -f "README.md,sparkling_water/ai_engine/ai.py" -u "https://github.com/marcoganassin96/git-overlap-tester-github.git" -m api -l 50
 ```
 
 ### Command Line Options
@@ -90,7 +90,7 @@ Check for potential conflicts before creating a PR
 | **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
 
 ## SETUP
-1. Download the [Last 'git-overlap-0.0.0.zip' release](https://github.com/marcoganassin96/git-conflicts-predictor/releases/latest)
+1. Download the [Last 'git-overlap-0.0.0.zip' release](https://github.com/marcoganassin96/git-overlap/releases/latest)
 2. Unzip the contents to a directory of your choice
 3. Run the `setup.sh` script to install the tool and set up necessary environment variables
    ```bash
