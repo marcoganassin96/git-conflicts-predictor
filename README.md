@@ -105,7 +105,7 @@ Check for potential conflicts before creating a PR
    ```bash
    git-overlap -h
    ```
-   or directly:
+   Alternatively, you can jump straight into a project. **Open a Git Bash terminal in your project directory** and run:
    ```bash
    git overlap -f README.md
    ```
