@@ -15,24 +15,22 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 # @Returns (Integer): Exit code. Always 1.
 ##
 usage() {
-
-  # v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-  #          [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-  #          [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
-  #          [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
-  #          [--config-env=<name>=<envvar>] <command> [<args>]
-
-  log "Usage: $0 [-f | --file] <path/to/file1> [[-f | --file] <path/to/file2> ...] [[-u | --url] <remote_url>] [[-m | --method] <gh|api>] [[-l | --limit] <number>]" >&2
-  log "       Or: $0 [-f | --file] <path/to/file1,path/to/file2,...> [[-u | --url] <remote_url>] [[-m | --method] <gh|api>] [[-l | --limit] <number>]" >&2
+  log "Usage: $0 [--local | --branch | --file <path/to/file1[,path/to/file2,...]>] [[--url <remote_url>] [--method <gh|api>] [--limit <number>]]" >&2
   log "" >&2
   log "Options:" >&2
-  log "  -f | --file     Path to file(s) to analyze (required)" >&2
-  log "  -u | --url      Remote repository URL (optional)" >&2
-  log "  -m | --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
+  log "  --local        Analyze uncommitted files in the local repository (optional)" >&2
+  log "  --branch       Analyze files changed in the current branch compared to its base branch (optional)" >&2
+  log "  -f | --file     Path to file(s) to analyze (optional)" >&2
+  log "      NOTE: --local, --branch, and --file are mutually exclusive. If none is provided, --local is assumed." >&2
+  log "  -u | --url      Remote repository URL (optional, defaults to 'git remote -v' output)" >&2
+  log "  -m | --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (default: to most efficient available)" >&2
   log "  -l | --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
   log "  -h | --help     Show this help message and exit" >&2
   log "" >&2
   log "These are common git overlap commands used in various situations::" >&2
+  log "  git overlap --local                                                  Shows which open PRs modify uncommitted files in the current repository" >&2
+  log "  git overlap --branch                                                 Shows which open PRs modify files changed in the current branch compared to its base branch in the current repository" >&2
+  log "  git overlap By default, it's equivalent to --local if no file selection flag is provided" >&2
   log "  git overlap -f \"README.md\"                                             Shows which open PRs modify README.md in the current repository" >&2
   log "  git overlap -f \"README.md,path/to/file.txt\"                            Shows which open PRs modify either README.md or path/to/file.txt in the current repository" >&2
   log "  git overlap -f \"path/to/file.txt\" -u https://github.com/user/repo.git  Shows which open PRs modify path/to/file.txt in the specified repository" >&2
@@ -65,6 +63,9 @@ common_parse_args() {
   METHOD=""
   LIMIT="$PR_FETCH_LIMIT_DEFAULT"
 
+  # Initialize a variable to track which file selection mode is used
+  SELECTED_MODE=""
+
   # --- Parsing Arguments ---
 
   while [[ $# -gt 0 ]]; do
@@ -72,18 +73,45 @@ common_parse_args() {
           --help|-h)
               usage
               ;;
+          --local)
+              if [[ -n "$SELECTED_MODE" ]]; then log_error "Error: --local, --branch, and --file are mutually exclusive."; exit 1; fi
+              SELECTED_MODE="local"
+              mapfile -t FILE_PATHS < <(git diff --name-only HEAD && git ls-files --others --exclude-standard)
+              
+              if [ ${#FILE_PATHS[@]} -eq 0 ]; then
+                log_warning "No uncommitted files found in the current repository with --local option. Execution will be interrupted." >&2
+                return 0
+              fi
+              log_info "Detected ${#FILE_PATHS[@]} uncommitted files in the local repository."
+              log_debug "Detected files are: ${FILE_PATHS[*]}"
+              shift
+              ;;
+          --branch)
+              if [[ -n "$SELECTED_MODE" ]]; then log_error "Error: --local, --branch, and --file are mutually exclusive."; exit 1; fi
+              SELECTED_MODE="branch"
+              # Detect base branch
+              BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+              BASE_BRANCH=${BASE_BRANCH:-main}
+              mapfile -t FILE_PATHS < <(git diff --name-only $(git merge-base HEAD "$BASE_BRANCH"))
+              if [ ${#FILE_PATHS[@]} -eq 0 ]; then
+                log_warning "No files changed in the current branch compared to '$BASE_BRANCH'. Execution will be interrupted." >&2
+                return 0
+              fi
+              log_info "Detected ${#FILE_PATHS[@]} files changed in the current branch compared to '$BASE_BRANCH'."
+              log_debug "Detected files are: ${FILE_PATHS[*]}"
+              shift
+              ;;
           --file|-f)
-              # Ensure the value exists for --file
-              if [[ -z "$2" || "$2" == --* ]]; then
-                  echo "Error: Argument expected for $1." >&2
+              if [[ -n "$SELECTED_MODE" ]]; then log_error "Error: --local, --branch, and --file are mutually exclusive."; exit 1; fi
+              SELECTED_MODE="file"
+              if [[ -n "$2" && "$2" != --* ]]; then
+                  IFS=',' read -r -a NEW_FILES <<< "$2"
+                  FILE_PATHS+=( "${NEW_FILES[@]}" )
+                  shift 2
+              else
+                  log_error "Error: Argument expected for $1." >&2
                   usage
               fi
-              
-              # Split comma-separated values and add to the FILES array
-              IFS=',' read -r -a NEW_FILES <<< "$2"
-              FILE_PATHS+=( "${NEW_FILES[@]}" )
-              
-              shift 2 # Consume the flag and its value
               ;;
           --url|-u)
               # Ensure the value exists for the URL
@@ -144,10 +172,17 @@ common_parse_args() {
 
   # --- Validation and Defaults ---
 
-  # 1. Validate if --file was provided
-  if [ ${#FILE_PATHS[@]} -eq 0 ]; then
-      log_error "The --file parameter is required." >&2
-      usage
+  # 1. Set default for FILE_PATHS if not provided via flag
+
+  # If the user provided NO flags (FILE_PATHS is empty), default to --local
+  if [[ ${#FILE_PATHS[@]} -eq 0 ]]; then
+      mapfile -t FILE_PATHS < <(git diff --name-only HEAD && git ls-files --others --exclude-standard)
+      log_info "Detected ${#FILE_PATHS[@]} uncommitted files in the local repository."
+      log_debug "Detected files are: ${FILE_PATHS[*]}"
+    if [ ${#FILE_PATHS[@]} -eq 0 ]; then
+        log_warning "No files specified via --file and no uncommitted files found in the current repository. Execution will be interrupted." >&2
+        return 0
+    fi
   fi
 
   # 2. Set default for REMOTE_URL if not provided via flag
@@ -228,7 +263,7 @@ common_print_results() {
 
   if [ ${#file_to_prs[@]} -eq 0 ]; then
     log "None of the specified files are modified in open PRs." >&2
-    exit 0
+    return 0
   fi
 
   log "\n--- Results ---"

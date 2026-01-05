@@ -51,6 +51,10 @@ check_dependencies() {
 # @Returns (Integer): Exit code. 0 if successful, 1 on error.
 ##
 _curl_api_method() {
+    log_debug "Invoked github 'api' method with parameters:" >&2
+    log_debug "  files: ${FILE_PATHS[*]}" >&2
+    log_debug "  remote_url: $REMOTE_URL" >&2
+    log_debug "  limit: $LIMIT" >&2
   # Initialize an array to store the final results: "file_path,branch_name"
   local -n RESULTS=$1
 
@@ -223,6 +227,10 @@ _curl_api_method() {
 # @Returns (Integer): Exit code. 0 if successful, 1 on error.
 ##
 _gh_cli_method() {
+    log_debug "Invoked github 'gh' with parameters:" >&2
+    log_debug "  files: ${FILE_PATHS[*]}" >&2
+    log_debug "  remote_url: $REMOTE_URL" >&2
+    log_debug "  limit: $LIMIT" >&2
   # Initialize an array to store the final results: "file_path,branch_name"
   local -n RESULTS=$1
 
@@ -341,9 +349,6 @@ relevate_conflicts(){
   # Remove the first argument (the variable name) from the list
   shift
 
-  # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT - The first argument (result) is removed 
-  common_parse_args "$@"
-
   # 1. Run the dependency check first
   check_dependencies
 
@@ -354,8 +359,12 @@ relevate_conflicts(){
 
 # --- Main Execution Block ---
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # Define a global associative array to hold the output for the CLI run
-  local -A MAIN_RESULTS
+  
+  # Define a global associative array to hold the output for the CLI run  
+  declare -A MAIN_RESULTS
+  
+  # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT - The first argument (result) is removed 
+  common_parse_args "$@"
   
   # Pass the NAME of that array as the first argument
   relevate_conflicts MAIN_RESULTS "$@"

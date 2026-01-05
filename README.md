@@ -27,6 +27,17 @@ PR #132: docs/readme
 
 ### Basic Usage
 ```bash
+# Analyze uncommitted files in the local repository (default)
+git overlap
+# or, explicitly
+git overlap --local
+
+# Analyze files changed in the current branch compared to its base branch
+git overlap --branch
+```
+
+### Custom File Analysis
+```bash
 # Analyze a single file
 git overlap --file src/main.py
 
@@ -39,6 +50,7 @@ git overlap --file "src/main.py,README.md,package.json"
 
 ### Advanced Usage
 ```bash
+# Analyze specific files in a custom remote repository using API method and limit to 50 PRs
 git overlap -f "README.md,sparkling_water/ai_engine/ai.py" -u "https://github.com/marcoganassin96/git-overlap-tester-github.git" -m api -l 50
 ```
 
@@ -46,11 +58,14 @@ git overlap -f "README.md,sparkling_water/ai_engine/ai.py" -u "https://github.co
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `[-f\|--file] <path>` | File path to analyze (required, can be used multiple times) | `--file src/main.py` |
+| `--local` | Analyze uncommitted files in the local repository (optional, mutually exclusive with --branch and --file) | `git overlap --local` |
+| `--branch` | Analyze files changed in the current branch compared to its base branch (optional, mutually exclusive with --local and --file) | `git overlap --branch` |
+| `[-f\|--file] <path>` | File path to analyze (optional, mutually exclusive with --local and --branch). Can be specified multiple times or as a comma-separated list. | `--file src/main.py --file README.md` or `--file "src/main.py,README.md"` |
 | `[-u\|--url] <url>` | Git remote URL (optional, auto-detected if not provided) | `--url https://github.com/user/repo.git` |
 | `[-m\|--method] <gh\|api>` | Method to use for querying provider: `gh` (GitHub CLI) or `api` (REST via curl). If omitted the script auto-detects the best available method. | `--method api` |
 | `[-l\|--limit] <number>` | Maximum number of open PRs to analyze (defaults to 200). Useful to cap work when repositories have many open PRs. | `--limit 100` |
 
+If none of `--local`, `--branch`, or `--file` is provided, `--local` is assumed by default.
 
 ### Environment Variables
 | Variable | Description | Example |
@@ -107,7 +122,7 @@ Check for potential conflicts before creating a PR
    ```
    Alternatively, you can jump straight into a project. **Open a Git Bash terminal in your project directory** and run:
    ```bash
-   git overlap -f README.md
+   git overlap
    ```
 6. Follow the Authentication Setup section below to configure access tokens for your Git providers (not needed if using CLI tools like `gh`)
 
