@@ -15,24 +15,22 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 # @Returns (Integer): Exit code. Always 1.
 ##
 usage() {
-
-  # v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-  #          [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-  #          [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
-  #          [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
-  #          [--config-env=<name>=<envvar>] <command> [<args>]
-
-  log "Usage: $0 [-f | --file] <path/to/file1> [[-f | --file] <path/to/file2> ...] [[-u | --url] <remote_url>] [[-m | --method] <gh|api>] [[-l | --limit] <number>]" >&2
-  log "       Or: $0 [-f | --file] <path/to/file1,path/to/file2,...> [[-u | --url] <remote_url>] [[-m | --method] <gh|api>] [[-l | --limit] <number>]" >&2
+  log "Usage: $0 [--local | --branch | --file <path/to/file1[,path/to/file2,...]>] [[--url <remote_url>] [--method <gh|api>] [--limit <number>]]" >&2
   log "" >&2
   log "Options:" >&2
-  log "  -f | --file     Path to file(s) to analyze (required)" >&2
-  log "  -u | --url      Remote repository URL (optional)" >&2
-  log "  -m | --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
+  log "  --local        Analyze uncommitted files in the local repository (optional)" >&2
+  log "  --branch       Analyze files changed in the current branch compared to its base branch (optional)" >&2
+  log "  -f | --file     Path to file(s) to analyze (optional)" >&2
+  log "      NOTE: --local, --branch, and --file are mutually exclusive. If none is provided, --local is assumed." >&2
+  log "  -u | --url      Remote repository URL (optional, defaults to 'git remote -v' output)" >&2
+  log "  -m | --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (default: to most efficient available)" >&2
   log "  -l | --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
   log "  -h | --help     Show this help message and exit" >&2
   log "" >&2
   log "These are common git overlap commands used in various situations::" >&2
+  log "  git overlap --local                                                  Shows which open PRs modify uncommitted files in the current repository" >&2
+  log "  git overlap --branch                                                 Shows which open PRs modify files changed in the current branch compared to its base branch in the current repository" >&2
+  log "  git overlap By default, it's equivalent to --local if no file selection flag is provided" >&2
   log "  git overlap -f \"README.md\"                                             Shows which open PRs modify README.md in the current repository" >&2
   log "  git overlap -f \"README.md,path/to/file.txt\"                            Shows which open PRs modify either README.md or path/to/file.txt in the current repository" >&2
   log "  git overlap -f \"path/to/file.txt\" -u https://github.com/user/repo.git  Shows which open PRs modify path/to/file.txt in the specified repository" >&2
