@@ -75,10 +75,15 @@ manage_conflicts_relevation()
     # Pass ALL original arguments ($@), previously saved in ORIGINAL_ARGS, to the provider script
 
     # Print debug info
-    log_debug "Executing $PROVIDER_SCRIPT_RELATIVE with arguments: ${ORIGINAL_ARGS[*]}"
+    log_debug "Executing $PROVIDER_SCRIPT_RELATIVE with following arguments:" >&2
+    log_debug "  files: ${FILE_PATHS[*]}" >&2
+    log_debug "  remote_url: $REMOTE_URL" >&2
+    log_debug "  method: $METHOD" >&2
+    log_debug "  limit: $LIMIT" >&2
 
     source "$PROVIDER_SCRIPT"
-    relevate_conflicts results "${ORIGINAL_ARGS[@]}"
+    # Call the relevate_conflicts function from the provider script with args: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
+    relevate_conflicts results FILE_PATHS REMOTE_URL METHOD LIMIT
     return $?
   else
     echo "Error: Provider script $PROVIDER_SCRIPT not found." >&2

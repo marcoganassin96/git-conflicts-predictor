@@ -27,6 +27,11 @@ check_dependencies() {
 # _curl_api_method: Use Bitbucket API via curl to find PRs modifying specified files.
 # Params: RESULTS associative array (name), uses FILE_PATHS, REMOTE_URL, LIMIT
 _curl_api_method() {
+    log_debug "Invoked bitbucket 'api' method with parameters:" >&2
+    log_debug "  files: ${FILE_PATHS[*]}" >&2
+    log_debug "  remote_url: $REMOTE_URL" >&2
+    log_debug "  limit: $LIMIT" >&2
+
   local -n RESULTS=$1
 
   log_info "Searching Bitbucket for PRs modifying ${#FILE_PATHS[@]} file(s) via curl..."
@@ -158,7 +163,6 @@ get_bitbucket_pr_branches() {
 relevate_conflicts(){
   local -n bb_results=$1
   shift
-  common_parse_args "$@"
   check_dependencies
   get_bitbucket_pr_branches bb_results "$@"
   return 0
@@ -167,5 +171,8 @@ relevate_conflicts(){
 # --- Main Execution Block ---
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   declare -A MAIN_RESULTS
+
+  # common_parse_args will set FILE_PATHS, REMOTE_URL, LIMIT, etc.
+  common_parse_args "$@"
   relevate_conflicts MAIN_RESULTS "$@"
 fi
