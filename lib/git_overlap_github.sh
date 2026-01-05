@@ -359,9 +359,9 @@ relevate_conflicts(){
 
 # --- Main Execution Block ---
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # Define a global associative array to hold the output for the CLI run
-  local -A MAIN_RESULTS
   
+  # Define a global associative array to hold the output for the CLI run  
+  declare -A MAIN_RESULTS
   
   # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT - The first argument (result) is removed 
   common_parse_args "$@"
