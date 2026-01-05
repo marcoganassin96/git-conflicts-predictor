@@ -265,7 +265,7 @@ common_print_results() {
 
   if [ ${#file_to_prs[@]} -eq 0 ]; then
     log "None of the specified files are modified in open PRs." >&2
-    exit 0
+    return 0
   fi
 
   log "\n--- Results ---"
