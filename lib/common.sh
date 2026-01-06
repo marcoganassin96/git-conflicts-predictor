@@ -103,7 +103,10 @@ common_parse_args() {
               shift
               ;;
           --file|-f)
-              if [[ -n "$SELECTED_MODE" ]]; then log_error "Error: --local, --branch, and --file are mutually exclusive."; exit 1; fi
+              # Only allowed SELECTED_MODE is "file", to allow multiple --file usages
+              if [[ -n "$SELECTED_MODE" && "$SELECTED_MODE" != "file" ]]; then
+                  log_error "Error: --local, --branch, and --file are mutually exclusive."; exit 1;
+              fi
               SELECTED_MODE="file"
               if [[ -n "$2" && "$2" != --* ]]; then
                   IFS=',' read -r -a NEW_FILES <<< "$2"
