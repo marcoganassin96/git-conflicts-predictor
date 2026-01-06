@@ -13,7 +13,7 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 # @Function: manage_conflicts_relevation
 # @Description: Main function to manage conflicts relevation across different Git providers.
 #
-# @Param 1 (Associative Array) results: Name of the associative array to store the results where keys are file paths and values are strings formatted as "PR_BRANCH,PR_ID;PR_BRANCH,PR_ID;..."
+# @Param 1 (Associative Array) results: Name of the associative array to store the results where keys are file paths and values are strings formatted as "PR_BRANCH1,PR_ID1,PR_TITLE1,PR_URL1;PR_BRANCH2,PR_ID2,PR_TITLE2,PR_URL2;..."
 # @Param 2 (String) --file: Comma-separated list of file paths to check.
 # @Param 3 (String) --url: Git remote URL of the repository.
 # @Param 4 (String) [--method]: Optional. Method to use ('gh' or 'api').

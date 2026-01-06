@@ -95,7 +95,7 @@ _curl_api_method() {
     page_offset=$(( page_offset + 1 ))
   done
 
-  OPEN_PRS_JSON=$(echo "$all_prs_json" | jq -c '[.[] | {id: .id, branch: .source.branch.name}]')
+  OPEN_PRS_JSON=$(echo "$all_prs_json" | jq -c '[.[] | {id: .id, branch: .source.branch.name, title: .title, url: .links.html.href}]')
 
   if [ -z "$OPEN_PRS_JSON" ] || [ "$OPEN_PRS_JSON" = "[]" ]; then
     log_info "No open PRs found."
@@ -113,6 +113,8 @@ _curl_api_method() {
   while IFS= read -r PR_OBJECT; do
     PR_NUMBER=$(echo "$PR_OBJECT" | jq -r '.id' | tr -d '[:space:]')
     PR_BRANCH=$(echo "$PR_OBJECT" | jq -r '.branch' | tr -d '[:space:]')
+    PR_TITLE=$(echo "$PR_OBJECT" | jq -r '.title')
+    PR_URL=$(echo "$PR_OBJECT" | jq -r '.url' | tr -d '[:space:]')
 
     log_progress "Processing PR $counter of $PR_COUNT: #${PR_NUMBER} (${PR_BRANCH})..."
     counter=$((counter + 1))
@@ -137,9 +139,9 @@ _curl_api_method() {
       for CHANGED_FILE in "${CHANGED_FILES_NAMES[@]}"; do
         if [ "$CHANGED_FILE" = "$TARGET_FILE" ]; then
           if [[ ! -v RESULTS["$TARGET_FILE"] ]]; then
-            RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER}"
+            RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER},${PR_TITLE},${PR_URL}"
           else
-            RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER}"
+            RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER},${PR_TITLE},${PR_URL}"
           fi
         fi
       done

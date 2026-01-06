@@ -15,8 +15,8 @@ REMOTE_URL="marcoganassin96/git-conflicts-predictor-tester-github"
 LIMIT=5
 
 declare -A EXPECTED_RESULTS=(
-  ["sparkling_water/ai_engine/ai.py"]="feat/improve_sparkling_water_with_ai,2"
-  ["README.md"]="feat/improve_sparkling_water_with_ai,2;feat/nanowarofsteel/zen_of_python,1"
+  ["sparkling_water/ai_engine/ai.py"]="feat/improve_sparkling_water_with_ai,2,Feat/improve sparkling water with ai,https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/2"
+  ["README.md"]="feat/improve_sparkling_water_with_ai,2,Feat/improve sparkling water with ai,https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/2;feat/nanowarofsteel/zen_of_python,1,docs: added \"work in progress\" section in README,https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/1"
 )
 
 # Define individual test functions (must start with 'test')
