@@ -79,7 +79,7 @@ If none of `--local`, `--branch`, or `--file` is provided, `--local` is assumed 
 
 - **Multi-Provider Support**: Currently works with GitHub and Bitbucket. GitLab support is planned.
 - **Automatic Provider Detection**: Automatically detects the Git hosting provider from remote URLs
-- **Flexible Input**: Support for overlap detection with multiple files and custom remote repo. In future, files you're working on will be used by default.
+- **Flexible Input**: Support for overlap detection with multiple files and custom remote repo. Files you're working on (uncommited files) are used by default.
 - **Multiple Access Methods**: Uses CLI tools (like `gh` for GitHub) when available for better performance, otherwise falls back to REST API.
 - **Comprehensive Output**: Provides detailed output of overlapping files and associated PRs/MRs.
 
@@ -105,7 +105,7 @@ Check for potential conflicts before creating a PR
 | **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
 
 ## SETUP
-1. Download the [Last 'git-overlap-0.0.0.zip' release](https://github.com/marcoganassin96/git-overlap/releases/latest)
+1. Download the [Last 'git-overlap-0.0.1.zip' release](https://github.com/marcoganassin96/git-overlap/releases/latest)
 2. Unzip the contents to a directory of your choice
 3. Run the `setup.sh` script to install the tool and set up necessary environment variables
    ```bash
@@ -127,9 +127,8 @@ Check for potential conflicts before creating a PR
 6. Follow the Authentication Setup section below to configure access tokens for your Git providers (not needed if using CLI tools like `gh`)
 
 
-## 🚀 Release Planning
+## 🚀 Work in progress
 - Implementation for GitLab provider
-- Auto-detection of files in current working branch as default --file input
 - Publish as installable package (e.g., via homebrew, winget, ...)
 
 ## 🛠 Installation & Dependencies
