@@ -29,7 +29,7 @@ _current_repo_files_test_logic() {
 
   # 1. Check if we are inside a git repository
   if ! git rev-parse --is-inside-work-tree &> /dev/null; then
-    log_warning "Skipping $test_name: Not inside a git repository."
+    log_warn "Skipping $test_name: Not inside a git repository."
     return 0
   fi
 
