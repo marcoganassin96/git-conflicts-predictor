@@ -47,6 +47,15 @@ manage_conflicts_relevation()
   # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
   common_parse_args "$@"
 
+  # if common_parse_args returned exit code 2, it means no files found to analyze (early exit)
+  local parse_args_exit_code=$?
+  if [ $parse_args_exit_code -eq 2 ]; then
+    return 0
+  elif [ $parse_args_exit_code -ne 0 ]; then
+    log_error "Error parsing arguments in common_parse_args."
+    return 1
+  fi
+
   PROVIDER=""
   PROVIDER_SCRIPT=""
 

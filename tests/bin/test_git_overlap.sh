@@ -8,6 +8,7 @@ TEST_DIR="$PROJECT_ROOT_DIR/tests"
 # Source shared helpers
 . "$TEST_DIR/utils.sh"
 . "$PROJECT_ROOT_DIR/bin/git-overlap.sh"
+. "$PROJECT_ROOT_DIR/lib/logging.sh"
 
 # Macro
 GITHUB_TEST_REPO_URL="https://github.com/marcoganassin96/git-conflicts-predictor-tester-github.git"
@@ -28,7 +29,7 @@ _current_repo_files_test_logic() {
 
   # 1. Check if we are inside a git repository
   if ! git rev-parse --is-inside-work-tree &> /dev/null; then
-    log_warning "Skipping $test_name: Not inside a git repository."
+    log_warn "Skipping $test_name: Not inside a git repository."
     return 0
   fi
 
