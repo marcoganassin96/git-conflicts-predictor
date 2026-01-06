@@ -257,7 +257,10 @@ common_get_repo_slug() {
 # @Description: Print the results of files modified in open PRs.
 # @Param 1 (Associative Array) file_to_prs: Associative array where keys are file paths and values are strings formatted as "PR_ID,PR_NAME;PR_ID,PR_NAME;..."
 #   Example:
-#     ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+#     (
+#       [ "utils/llm.py" ]="101,feature/llm-update,Update LLM main logic,http://project/pull/101;102,bugfix/llm-patch,Fix LLM bug,http://project/pull/102"
+#       [ "README.md" ]="105,doc-fix,Update documentation,http://project/pull/105"
+#     )
 # @Output: Prints the results to standard output.
 # @Returns (Integer): Exit code. 0 if successful, 1 on error.
 ##
@@ -273,21 +276,21 @@ common_print_results() {
   log "\n--- Results ---"
   # For each entry (File path) in file_to_prs, print the list of PR branch and PR ID
   # Assume file_to_prs is an associative array populated elsewhere, e.g.:
-  #   file_to_prs["utils/llm.py"]="101,feature/llm-update_;102,bugfix/llm-patch"
-  #   file_to_prs["README.md"]="105,doc-fix"
+  #   file_to_prs["utils/llm.py"]="101,feature/llm-update,Update LLM main logic,http://project/pull/101;102,bugfix/llm-patch,Fix LLM bug,http://project/pull/102"
+  #   file_to_prs["README.md"]="105,doc-fix,Update documentation,http://project/pull/105"
 
   # Iterate over all keys in the associative array
   for file_name in "${!file_to_prs[@]}"; do
-      # 1. Retrieve the value (e.g., "101,feature/llm-update")
-      file_output="File: **$file_name** is modified in PRs: "
+      # 1. Retrieve the value (e.g., "101,feature/llm-update,Update LLM main logic,http://project/pull/101")     
+      file_output="\n$BOLD$file_name$RESET"
       value="${file_to_prs[$file_name]}"
 
       # 2. Use ; to split multiple PR entries
       IFS=';' read -r -a pr_entries <<< "$value"
-      # 3. For each entry, split by , to get PR ID and PR name
+      # 3. For each entry, split by , to get PR ID, PR branch, PR title, PR URL
       for entry in "${pr_entries[@]}"; do
-          IFS=',' read -r pr_name pr_id <<< "$entry"
-          file_output+="\n- PR #${pr_id}: ${pr_name}"
+          IFS=',' read -r pr_branch pr_id pr_title pr_url <<< "$entry"
+          file_output+="\n- PR #${pr_id}: ${pr_title} ${GRAY}(${pr_branch})${NC}\n    ${pr_url}"
       done
       log "$file_output"
   done

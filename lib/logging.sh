@@ -9,6 +9,11 @@ RED="\033[31m"
 GRAY="\033[90m"
 NC="\033[0m" # No Color
 
+BOLD="\033[1m"
+ITALIC="\033[3m"
+UNDERLINE="\033[4m"
+RESET="\033[0m"
+
 ##
 # @Function: log
 # @Description: General logging function with optional color

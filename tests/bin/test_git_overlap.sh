@@ -15,10 +15,6 @@ GITHUB_TEST_REPO_URL="https://github.com/marcoganassin96/git-conflicts-predictor
 BITBUCKET_TEST_REPO_URL="https://bitbucket.org/MarcoGanassin/git-conflicts-predictor-tester-bitbucket"
 
 FILES_TO_TEST="README.md,sparkling_water/ai_engine/ai.py"
-declare -A EXPECTED_RESULTS=(
-  ["sparkling_water/ai_engine/ai.py"]="feat/improve_sparkling_water_with_ai,2"
-  ["README.md"]="feat/improve_sparkling_water_with_ai,2;feat/nanowarofsteel/zen_of_python,1"
-)
 
 # --- Helper Function ---
 # Arguments: $1=Repo URL, $2=Mode Flag (optional), $3=Test Function Name (for logging)
@@ -54,6 +50,11 @@ _current_repo_files_test_logic() {
 # GITHUB TESTS
 # ==============================================================================
 
+declare -A EXPECTED_RESULTS_GITHUB=(
+  ["sparkling_water/ai_engine/ai.py"]="feat/improve_sparkling_water_with_ai,2,Feat/improve sparkling water with ai,https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/2"
+  ["README.md"]="feat/improve_sparkling_water_with_ai,2,Feat/improve sparkling water with ai,https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/2;feat/nanowarofsteel/zen_of_python,1,docs: added \"work in progress\" section in README,https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/1"
+)
+
 # -- Files from current repo ----------------------------------------------------------------------
 
 test_relevate_conflicts_github_local() {
@@ -73,25 +74,30 @@ test_relevate_conflicts_github_no_file() {
 test_relevate_conflicts_github_api() {
   declare -A relevate_conflicts_result
   manage_conflicts_relevation relevate_conflicts_result --file "$FILES_TO_TEST" --url "$GITHUB_TEST_REPO_URL" --method api --limit 5
-  assertArrayEquals EXPECTED_RESULTS relevate_conflicts_result "API method results mismatch"
+  assertArrayEquals EXPECTED_RESULTS_GITHUB relevate_conflicts_result "API method results mismatch"
 }
 
 test_relevate_conflicts_github_gh() {
   declare -A relevate_conflicts_result
   manage_conflicts_relevation relevate_conflicts_result --file "$FILES_TO_TEST" --url "$GITHUB_TEST_REPO_URL" --method gh --limit 5
-  assertArrayEquals EXPECTED_RESULTS relevate_conflicts_result "GH method results mismatch"
+  assertArrayEquals EXPECTED_RESULTS_GITHUB relevate_conflicts_result "GH method results mismatch"
 }
 
 test_relevate_conflicts_github_auto() {
   declare -A relevate_conflicts_result
   manage_conflicts_relevation relevate_conflicts_result --file "$FILES_TO_TEST" --url "$GITHUB_TEST_REPO_URL" --limit 5
-  assertArrayEquals EXPECTED_RESULTS relevate_conflicts_result "Auto method results mismatch"
+  assertArrayEquals EXPECTED_RESULTS_GITHUB relevate_conflicts_result "Auto method results mismatch"
 }
 
 
 # ==============================================================================
 # BITBUCKET TESTS
 # ==============================================================================
+
+declare -A EXPECTED_RESULTS_BITBUCKET=(
+  ["sparkling_water/ai_engine/ai.py"]="feat/improve_sparkling_water_with_ai,2,Feat/improve sparkling water with ai,https://bitbucket.org/MarcoGanassin/git-conflicts-predictor-tester-bitbucket/pull-requests/2"
+  ["README.md"]="feat/improve_sparkling_water_with_ai,2,Feat/improve sparkling water with ai,https://bitbucket.org/MarcoGanassin/git-conflicts-predictor-tester-bitbucket/pull-requests/2;feat/nanowarofsteel/zen_of_python,1,docs: added \"work in progress\" section in README,https://bitbucket.org/MarcoGanassin/git-conflicts-predictor-tester-bitbucket/pull-requests/1"
+)
 
 # -- Files from current repo ----------------------------------------------------------------------
 
@@ -112,7 +118,7 @@ test_relevate_conflicts_bitbucket_no_file() {
 test_relevate_conflicts_bitbucket_auto() {
   declare -A relevate_conflicts_result
   manage_conflicts_relevation relevate_conflicts_result --file "$FILES_TO_TEST" --url "$BITBUCKET_TEST_REPO_URL" --limit 5
-  assertArrayEquals EXPECTED_RESULTS relevate_conflicts_result "Bitbucket Auto method results mismatch"
+  assertArrayEquals EXPECTED_RESULTS_BITBUCKET relevate_conflicts_result "Bitbucket Auto method results mismatch"
 }
 
 # ------------------------------------------------------------------------------

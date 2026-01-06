@@ -47,7 +47,10 @@ check_dependencies() {
 # @Param 3 (String) LIMIT: Maximum number of PRs to analyze.
 #   Example: "50"
 # @Output (Associative Array): Prints the results to standard output.
-#       ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# (
+#   [ "utils/llm.py" ]="101,feature/llm-update,Update LLM main logic,http://project/pull/101;102,bugfix/llm-patch,Fix LLM bug,http://project/pull/102"
+#   [ "README.md" ]="105,doc-fix,Update documentation,http://project/pull/105"
+# )
 # @Returns (Integer): Exit code. 0 if successful, 1 on error.
 ##
 _curl_api_method() {
@@ -130,7 +133,7 @@ _curl_api_method() {
   done
 
   # 3 Use 'jq' filter to create an array of objects: [{"number": 123, "head_ref": "feature-branch"}, ...]
-  OPEN_PRS_JSON=$(echo "$all_prs_json" | jq -c '[.[] | {number: .number, head_ref: .head.ref}]')
+  OPEN_PRS_JSON=$(echo "$all_prs_json" | jq -c '[.[] | {number: .number, head_ref: .head.ref, title: .title, url: .html_url}]')
 
   if [ -z "$OPEN_PRS_JSON" ] || [ "$OPEN_PRS_JSON" = "[]" ]; then
     log_info "No open PRs found."
@@ -151,6 +154,8 @@ _curl_api_method() {
       
     PR_NUMBER=$(echo "$PR_OBJECT" | jq -r '.number' | tr -d '[:space:]')
     PR_BRANCH=$(echo "$PR_OBJECT" | jq -r '.head_ref' | tr -d '[:space:]')
+    PR_TITLE=$(echo "$PR_OBJECT" | jq -r '.title')
+    PR_URL=$(echo "$PR_OBJECT" | jq -r '.url' | tr -d '[:space:]')
 
     # Display progress using logging helper
     log_progress "Processing PR $counter of $PR_COUNT: #${PR_NUMBER} (${PR_BRANCH})..."
@@ -191,9 +196,9 @@ _curl_api_method() {
           if [[ ! -v RESULTS["$TARGET_FILE"] ]]; then
               # We use a string to store the list/array elements, separated by a delimiter.
               # We'll use a semicolon (;) as the list delimiter.
-              RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER}"
+              RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER},${PR_TITLE},${PR_URL}"
           else
-              RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER}"
+              RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER},${PR_TITLE},${PR_URL}"
           fi
 
           log_debug "Found target file '$TARGET_FILE' in PR #${PR_NUMBER} (branch: ${PR_BRANCH})"
@@ -223,7 +228,10 @@ _curl_api_method() {
 #  @Param 4 (String) METHOD: Method to use ('gh' or 'api').
 #   Example: "gh" or "api"
 # @Output (Associative Array): Prints the results to standard output.
-#       ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# (
+#   [ "utils/llm.py" ]="101,feature/llm-update,Update LLM main logic,http://project/pull/101;102,bugfix/llm-patch,Fix LLM bug,http://project/pull/102"
+#   [ "README.md" ]="105,doc-fix,Update documentation,http://project/pull/105"
+# )
 # @Returns (Integer): Exit code. 0 if successful, 1 on error.
 ##
 _gh_cli_method() {
@@ -247,7 +255,7 @@ _gh_cli_method() {
     gh pr list \
       --repo "$REPO_SLUG" \
       --limit $LIMIT \
-      --json number,headRefName,files \
+      --json number,headRefName,files,title,url \
       --search "is:open is:unmerged"
   )
   
@@ -266,6 +274,9 @@ _gh_cli_method() {
   while IFS= read -r PR_OBJECT; do
     PR_NUMBER=$(echo "$PR_OBJECT" | jq -r '.number' | tr -d '[:space:]')
     PR_BRANCH=$(echo "$PR_OBJECT" | jq -r '.headRefName' | tr -d '[:space:]')
+    PR_TITLE=$(echo "$PR_OBJECT" | jq -r '.title')
+    PR_URL=$(echo "$PR_OBJECT" | jq -r '.url' | tr -d '[:space:]')
+
     log_progress "Processing PR $counter of $PR_COUNT: #${PR_NUMBER} (${PR_BRANCH})..."
     counter=$((counter + 1))
     # Extract changed files array
@@ -277,9 +288,9 @@ _gh_cli_method() {
       for CHANGED_FILE in "${CHANGED_FILES_NAMES[@]}"; do
         if [ "$CHANGED_FILE" = "$TARGET_FILE" ]; then
           if [[ ! -v RESULTS["$TARGET_FILE"] ]]; then
-              RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER}"
+              RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER},${PR_TITLE},${PR_URL}"
           else
-              RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER}"
+              RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER},${PR_TITLE},${PR_URL}"
           fi
         fi
       done
