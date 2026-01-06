@@ -8,6 +8,7 @@ TEST_DIR="$PROJECT_ROOT_DIR/tests"
 # Source shared helpers
 . "$TEST_DIR/utils.sh"
 . "$PROJECT_ROOT_DIR/bin/git-overlap.sh"
+. "$PROJECT_ROOT_DIR/lib/logging.sh"
 
 # Macro
 GITHUB_TEST_REPO_URL="https://github.com/marcoganassin96/git-conflicts-predictor-tester-github.git"
