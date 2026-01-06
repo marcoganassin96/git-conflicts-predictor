@@ -6,21 +6,22 @@ A multi-provider tool that **identifies file overlaps** and **potential conflict
 
 ### 📊 Example
 ```bash
-$ git overlap -f src/main.py,README.md,src/foo.py
-
-Debug: Parsed repository full name from REMOTE_URL: https://github.com/marcoganassin96/git-overlap
-🔑 Searching GitHub for PRs modifying 2 file(s) via gh CLI...
-Debug: Analyzing 15 open PR(s) in the repository...
-
-Processing PR 15 of 15: #132 (docs/readme)...
+$ git overlap -f sparkling_water/ai_engine/ai.py,README.md
+✅ 'gh' CLI found. Using the efficient 'gh pr list' method.
+[INFO] Searching GitHub for PRs modifying 2 file(s) via gh...
+Processing PR 13 of 13: #1 (feat/nanowarofsteel/zen_of_python)...
 
 --- Results ---
-File: **src/main.py** is modified in PRs:
-PR #121: feature/user-authentication
-PR #123: bugfix/login-validation
 
-File: **README.md** is modified in PRs:
-PR #132: docs/readme
+sparkling_water/ai_engine/ai.py
+- PR #2: Feat/improve sparkling water with ai (feat/improve_sparkling_water_with_ai)
+    https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/2
+
+README.md
+- PR #2: Feat/improve sparkling water with ai (feat/improve_sparkling_water_with_ai)
+    https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/2
+- PR #1: docs: added "work in progress" section in README (feat/nanowarofsteel/zen_of_python)
+    https://github.com/marcoganassin96/git-conflicts-predictor-tester-github/pull/1
 ```
 
 ⚠️ **Note**: To use this tool, you need to install it following the [Setup Instructions](#setup) below.
