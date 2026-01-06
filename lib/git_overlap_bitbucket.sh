@@ -174,5 +174,15 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
   # common_parse_args will set FILE_PATHS, REMOTE_URL, LIMIT, etc.
   common_parse_args "$@"
+  
+  # if common_parse_args returned exit code 2, it means no files found to analyze (early exit)
+  local parse_args_exit_code=$?
+  if [ $parse_args_exit_code -eq 2 ]; then
+    return 0
+  elif [ $parse_args_exit_code -ne 0 ]; then
+    log_error "Error parsing arguments in common_parse_args."
+    return 1
+  fi
+
   relevate_conflicts MAIN_RESULTS "$@"
 fi

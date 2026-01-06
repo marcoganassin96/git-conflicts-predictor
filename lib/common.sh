@@ -55,6 +55,7 @@ usage() {
 # @Returns (Integer): Exit code.
 #   0 if the extraction is successful.
 #   1 on error.
+#   2 if no files found to analyze (early exit).
 ##
 common_parse_args() {
   PR_FETCH_LIMIT_DEFAULT=200
@@ -80,7 +81,7 @@ common_parse_args() {
               
               if [ ${#FILE_PATHS[@]} -eq 0 ]; then
                 log_warn "No uncommitted files found in the current repository with --local option. Execution will be interrupted." >&2
-                return 0
+                return 2 # Exit code 2 indicates early exit due to no files found
               fi
               log_info "Detected ${#FILE_PATHS[@]} uncommitted files in the local repository."
               log_debug "Detected files are: ${FILE_PATHS[*]}"
@@ -95,7 +96,7 @@ common_parse_args() {
               mapfile -t FILE_PATHS < <(git diff --name-only $(git merge-base HEAD "$BASE_BRANCH"))
               if [ ${#FILE_PATHS[@]} -eq 0 ]; then
                 log_warn "No files changed in the current branch compared to '$BASE_BRANCH'. Execution will be interrupted." >&2
-                return 0
+                return 2 # Exit code 2 indicates early exit due to no files found
               fi
               log_info "Detected ${#FILE_PATHS[@]} files changed in the current branch compared to '$BASE_BRANCH'."
               log_debug "Detected files are: ${FILE_PATHS[*]}"
@@ -181,7 +182,7 @@ common_parse_args() {
       log_debug "Detected files are: ${FILE_PATHS[*]}"
     if [ ${#FILE_PATHS[@]} -eq 0 ]; then
         log_warn "No files specified via --file and no uncommitted files found in the current repository. Execution will be interrupted." >&2
-        return 0
+        return 2 # Exit code 2 indicates early exit due to no files found
     fi
   fi
 
