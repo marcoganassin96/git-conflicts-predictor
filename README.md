@@ -55,6 +55,27 @@ git overlap --file "src/main.py,README.md,package.json"
 git overlap -f "README.md,sparkling_water/ai_engine/ai.py" -u "https://github.com/marcoganassin96/git-overlap-tester-github.git" -m api -l 50
 ```
 
+### Git overap in action
+https://github.com/user-attachments/assets/803e1294-085a-4dfd-9ebc-5b3801dd3a73
+
+In this short video:
+#### Example 1: Overlap detection for local uncommitted files
+1. [0:00] Reading local files: We begin by checking the files we are currently modifying: README.md and 'sparkling_water/ai_engine/ai.py'. 
+2. [0:08] Running the command: We want to find if anyone else is modifying these two files in opened PR for the current repository, so we run the command:
+    ```bash
+    git overlap
+    ```
+3. [0:16] Identifying an overlap: The tool detects that 'sparkling_water/ai_engine/ai.py' is being modified in PR #2. We then open the provided PR URL to investigate.
+4. [0:30] Verification: As shown, the 'ai.py' file is indeed being modified in the active PR #2.
+
+#### Example 2: Overlap detection for specific files in a remote repository
+1. [0:40] Checking remote files: We want to check for overlaps in specific files ('README.md', 'searches/binary_search.py', 'maths/palindrome_number.py') in a public repository (TheAlgorithms/Python). To limit the scope to recent activity, we set a limit of 25 PRs. We run the command:
+    ```bash
+    git overlap -f README.md -f searches/binary_search.py -f maths/palindrome_number.py --url https://github.com/TheAlgorithms/Python --limit 25
+    ```
+2. [0:59] Locating the overlap: The tool finds that 'searches/binary_search.py' is currently modified in PR #14080. We open the link for more details.
+3. [1:04] Final result: We can see the PR containing the specific changes to the file in question. 
+
 ### Command Line Options
 
 | Option | Description | Example |
@@ -106,7 +127,7 @@ Check for potential conflicts before creating a PR
 | **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
 
 ## SETUP
-1. Download the [Last 'git-overlap-0.0.1.zip' release](https://github.com/marcoganassin96/git-overlap/releases/latest)
+1. Download the [Last 'git-overlap-0.0.2.zip' release](https://github.com/marcoganassin96/git-overlap/releases/latest)
 2. Unzip the contents to a directory of your choice
 3. Run the `setup.sh` script to install the tool and set up necessary environment variables
    ```bash
