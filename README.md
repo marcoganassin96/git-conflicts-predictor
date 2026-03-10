@@ -99,7 +99,7 @@ If none of `--local`, `--branch`, or `--file` is provided, `--local` is assumed 
 
 ## 🚀 Features
 
-- **Multi-Provider Support**: Currently works with GitHub and Bitbucket. GitLab support is planned.
+- **Multi-Provider Support**: Currently works with GitHub, Bitbucket, and GitLab.
 - **Automatic Provider Detection**: Automatically detects the Git hosting provider from remote URLs
 - **Flexible Input**: Support for overlap detection with multiple files and custom remote repo. Files you're working on (uncommited files) are used by default.
 - **Multiple Access Methods**: Uses CLI tools (like `gh` for GitHub) when available for better performance, otherwise falls back to REST API.
@@ -123,8 +123,8 @@ Check for potential conflicts before creating a PR
 | Provider | CLI Tool | API Method | Authentication | Working Status |
 |----------|----------|------------|----------------|----------------|
 | **GitHub** | `gh` (recommended) | REST API | `GITHUB_TOKEN` | ✅ Fully Supported |
-| **Bitbucket** | N/A | REST API | `BITBUCKET_TOKEN` | ✅ Added (API)
-| **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
+| **Bitbucket** | N/A | REST API | `BITBUCKET_TOKEN` | ✅ API Supported (no CLI tool available) |
+| **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | ✅ Fully Supported |
 
 ## SETUP
 1. Download the [Last 'git-overlap-0.0.2.zip' release](https://github.com/marcoganassin96/git-overlap/releases/latest)
@@ -150,7 +150,6 @@ Check for potential conflicts before creating a PR
 
 
 ## 🚀 Work in progress
-- Implementation for GitLab provider
 - Publish as installable package (e.g., via homebrew, winget, ...)
 
 ## 🛠 Installation & Dependencies
