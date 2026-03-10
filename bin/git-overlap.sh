@@ -31,6 +31,7 @@ manage_conflicts_relevation()
 
   # Define the path to the provider-specific scripts
   GITHUB_SCRIPT="$PROJECT_ROOT_DIR/lib/git_overlap_github.sh"
+  GITLAB_SCRIPT="$PROJECT_ROOT_DIR/lib/git_overlap_gitlab.sh"
   BITBUCKET_SCRIPT="$PROJECT_ROOT_DIR/lib/git_overlap_bitbucket.sh"
 
   # --- COPY THE ORIGINAL ARGUMENTS IMMEDIATELY ---
@@ -63,11 +64,9 @@ manage_conflicts_relevation()
   if [[ $REMOTE_URL =~ github.com ]]; then
     PROVIDER="github"
     PROVIDER_SCRIPT=$GITHUB_SCRIPT
-  # ... (GitLab and Bitbucket checks remain the same)
   elif [[ $REMOTE_URL =~ gitlab.com ]]; then
     PROVIDER="gitlab"
-    log_error "GitLab provider detected, but provider script is not yet implemented." >&2
-    exit 1
+    PROVIDER_SCRIPT=$GITLAB_SCRIPT
   elif [[ $REMOTE_URL =~ bitbucket.org ]]; then
     PROVIDER="bitbucket"
     PROVIDER_SCRIPT=$BITBUCKET_SCRIPT
